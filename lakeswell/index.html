@@ -1,0 +1,208 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mark's lakeswell page</title>
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+  <script src="jquery.ui.touch-punch.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+  <script type="text/javascript" src="jquery.imgpreload.js"></script>
+  <script type="text/javascript" src="temp_lookup.js"></script>
+
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+
+  <link href="style.css" type="text/css" rel="stylesheet" />
+  <link href='http://fonts.googleapis.com/css?family=Amatic+SC' rel='stylesheet' type='text/css'>
+
+  <link rel="icon" href="/favicon3.ico" type="image/x-icon"> 
+  <link rel="shortcut icon" href="/favicon3.ico" type="image/x-icon"> 
+
+
+
+  <script>
+
+  var lg=-79.7310;
+  var lt=43.2795;
+
+  var sc=SunCalc.getTimes(new Date(), lt, lg);
+
+  console.log("at 55 wear "+(wear_at_temp(55))+"\n");
+  console.log("sunrise at "+sc.sunrise.getHours() +":"+ sc.sunrise.getMinutes() );
+  console.log("sunset at "+sc.sunset.getHours() +":"+ sc.sunset.getMinutes() );
+
+  $(function() {
+  
+  
+  //preload images from -48 to 120
+	var the_images = [];
+	var cast = "";
+  for (var i = -48; i < 121; i++){
+	var offset = i;
+	if(offset > 9){
+		offset = "+"+offset;
+		cast="fcast";
+	}else if(offset > 0 && offset < 10){
+		offset = "+0"+offset
+				cast="fcast";
+	}else if(offset < 0 && offset > -10){
+		offset = "-0"+(i*(-1));
+		cast="ncast";
+	}else if(offset == 0){ //skip zero, avoid preload issues
+		offset = "+01";
+		i=1;
+		cast="fcast";
+	}
+    var temp_offset="+" + (parseInt(offset)+12);
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/owv"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/own"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/oswt"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/osfcur"+ offset+".gif");
+  }
+  
+
+  
+      $( "#slider" ).slider({
+	  background: 100, 
+      range: "min",
+      min: -48,
+      max: 120,
+      value: 01,
+
+      slide: function( event, ui ) {
+		var offset = ui.value;
+		if(offset > 9){
+			offset = "+"+offset;
+			cast="fcast";
+		}else if(offset > 0 && offset < 10){
+			offset = "+0"+offset
+			cast="fcast";
+		}else if(offset < 0 && offset > -10){
+			offset = "-0"+(offset*(-1));
+			cast="ncast";
+		}else if(offset == 0){ //skip zero, avoid preload issues
+			offset = "+01";
+			cast="fcast";
+		}
+
+        var temp_offset="+" + (parseInt(offset)+12);
+        $("#amount").text( offset );
+        $("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/owv"+ offset +".gif");
+        $("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/own"+ offset +".gif"); 
+        $("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/oswt"+ offset +".gif"); 
+        $("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/osfcur"+ offset +".gif"); 
+
+	// debug stuff:
+        /*
+	$("#temps_title").text( $("#temps").attr("src").substring(36) );
+	$("#currents_title").text( $("#currents").attr("src").substring(36) );
+	$("#wind_title").text( $("#wind").attr("src").substring(36) );
+	$("#waves_title").text( $("#waves").attr("src").substring(36) );
+        */
+      }
+    });    
+
+	$("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/owv+01.gif");
+	$("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/own+01.gif");        
+	$("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/oswt+01.gif");        
+	$("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/osfcur+01.gif");        
+	
+	$("#graph_container").fadeIn(1000);
+
+	$("#graph_container2").fadeIn(1000);
+  
+  
+  	var loaded = 0;
+	var total = 168 *4;
+  
+  		jQuery.imgpreload(the_images,
+		{
+			each: function()
+			{
+			  loaded++;
+			var percentage = parseInt(loaded / total * 100) + '%';
+			$('#progress-bar').html("Loading images: "+percentage);
+			},
+			all: function()
+			{
+    	  
+				$('#progress-bar').fadeOut(300);
+
+				//enable slider
+				$( "#slider" ).slider("enable");
+				
+				//load images for +01 (fade in?)
+	
+			}
+		});
+		
+
+
+  
+  
+  });
+  </script>
+  
+  <style type="text/css">
+  
+  </style>
+
+</head>
+<body>
+<div id="top">
+<div class="title" id="amount">+01</div>
+<div class="title">hrs</div>
+<div class="title" id="progress-bar"></div>
+<div id="slider"></div>
+</div> 
+
+<p id="waves_title"> waves </p> 
+<p id="wind_title"> wind </p>
+
+
+<div style="clear:both;" ></div>
+<div id="graph_container">
+	<div class="container">
+		<img id="waves" class="graphs" src="#" alt=""/> 
+	</div>	
+	
+	<div class="container">
+		<img id="wind"  class="graphs" src="#" alt="" /> 
+
+	</div>	
+
+</div> 
+
+<div style="clear:both;" ></div>
+<p id="temps_title"> temperatures </p> 
+<p id="currents_title"> currents </p>
+
+<div style="clear:both;" ></div>
+<div id="graph_container2">
+
+	<div class="container">
+		<img id="temps"  class="graphs" src="#" alt="" /> 
+
+	</div>	
+
+	<div class="container">
+		<img id="currents"  class="graphs" src="#" alt="" /> 
+
+	</div>	
+
+</div> 
+<div id="footer">
+<p >Images from <a href="http://www.glerl.noaa.gov/res/glcfs/" target="_blank">GLCFS by GLERL</a>.</p> 
+</div>
+
+
+<a href="https://www.accuweather.com/en/ca/burlington/l7s/weather-forecast/49566" class="aw-widget-legal">
+<!--
+By accessing and/or using this code snippet, you agree to AccuWeather’s terms and conditions (in English) which can be found at https://www.accuweather.com/en/free-weather-widgets/terms and AccuWeather’s Privacy Statement (in English) which can be found at https://www.accuweather.com/en/privacy.
+-->
+</a><div id="awtd1522881865444" class="aw-widget-36hour"  data-locationkey="49566" data-unit="c" data-language="en-us" data-useip="false" data-uid="awtd1522881865444" data-editlocation="false"></div><script type="text/javascript" src="https://oap.accuweather.com/launch.js"></script>
+ 
+</body>
+</html>
+
+
