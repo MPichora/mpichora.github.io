@@ -15,8 +15,8 @@
   <link href="style.css" type="text/css" rel="stylesheet" />
   <link href='https://fonts.googleapis.com/css?family=Amatic+SC' rel='stylesheet' type='text/css'>
 
-  <link rel="icon" href="/favicon3.ico" type="image/x-icon"> 
-  <link rel="shortcut icon" href="/favicon3.ico" type="image/x-icon"> 
+  <link rel="icon" href="favicon.ico" type="image/x-icon"> 
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"> 
 
 
 
@@ -31,12 +31,10 @@
   console.log("sunrise at "+sc.sunrise.getHours() +":"+ sc.sunrise.getMinutes() );
   console.log("sunset at "+sc.sunset.getHours() +":"+ sc.sunset.getMinutes() );
 
-  $(function() {
-  
-  
+  function showLake(lk) {
   //preload images from -48 to 120
-	var the_images = [];
-	var cast = "";
+  var the_images = [];
+  var cast = "";
   for (var i = -48; i < 121; i++){
 	var offset = i;
 	if(offset > 9){
@@ -54,10 +52,10 @@
 		cast="fcast";
 	}
     var temp_offset="+" + (parseInt(offset)+12);
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/owv"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/own"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/oswt"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/osfcur"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wv"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wn"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"swt"+ offset+".gif");
+    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"sfcur"+ offset+".gif");
   }
   
 
@@ -87,10 +85,10 @@
 
         var temp_offset="+" + (parseInt(offset)+12);
         $("#amount").text( offset );
-        $("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/owv"+ offset +".gif");
-        $("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/own"+ offset +".gif"); 
-        $("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/oswt"+ offset +".gif"); 
-        $("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/osfcur"+ offset +".gif"); 
+        $("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wv"+ offset +".gif");
+        $("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wn"+ offset +".gif"); 
+        $("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"swt"+ offset +".gif"); 
+        $("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"sfcur"+ offset +".gif"); 
 
 	// debug stuff:
         /*
@@ -102,10 +100,10 @@
       }
     });    
 
-	$("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/owv+01.gif");
-	$("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/own+01.gif");        
-	$("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/oswt+01.gif");        
-	$("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/osfcur+01.gif");        
+	$("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"wv+01.gif");
+	$("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"wn+01.gif");        
+	$("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"swt+01.gif");        
+	$("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"sfcur+01.gif");        
 	
 	$("#graph_container").fadeIn(1000);
 
@@ -136,10 +134,20 @@
 			}
 		});
 		
+  }
+
+  function newLakeOnClick(elmt) {
+	  console.log(elmt.href);
+  }
 
 
-  
-  
+  $(function() {
+	  $("#hlake").on('click', function () { showLake("h"); $("button.dropbtn").text("Lake Huron"); });
+	  $("#elake").on('click', function () { showLake("e"); $("button.dropbtn").text("Lake Erie"); });
+	  $("#mlake").on('click', function () { showLake("m"); $("button.dropbtn").text("Lake Michigan"); });
+	  $("#slake").on('click', function () { showLake("s"); $("button.dropbtn").text("Lake Superior"); });
+	  $("#olake").on('click', function () { showLake("o"); $("button.dropbtn").text("Lake Ontario"); });
+	  showLake("o");
   });
   </script>
   
@@ -149,6 +157,17 @@
 
 </head>
 <body>
+<div class="dropdown">
+	<button class="dropbtn">Lake Ontario</button>
+	<div class="dropdown-content">
+		<a id="olake" onclick="newLakeOnClick(this)">Ontario</a>
+		<a id="hlake" onclick="newLakeOnClick(this)">Huron</a>
+		<a id="elake" onclick="newLakeOnClick(this)">Erie</a>
+		<a id="mlake" onclick="newLakeOnClick(this)">Michigan</a>
+		<a id="slake" onclick="newLakeOnClick(this)">Superior</a>
+	</div>
+</div>
+
 <div id="top">
 <div class="title" id="amount">+01</div>
 <div class="title">hrs</div>
