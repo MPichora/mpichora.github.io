@@ -22,6 +22,10 @@
 
   <script>
 
+  var url_base="https://www.glerl.noaa.gov/res/glcfs/";
+  var max_hour= 71;
+  var min_hour= -40;
+
   var lg=-79.7310;
   var lt=43.2795;
 
@@ -30,32 +34,64 @@
   console.log("at 55 wear "+(wear_at_temp(55))+"\n");
   console.log("sunrise at "+sc.sunrise.getHours() +":"+ sc.sunrise.getMinutes() );
   console.log("sunset at "+sc.sunset.getHours() +":"+ sc.sunset.getMinutes() );
+  var fulllk;
 
+  function format_url(prefix,offset,suffix) {
+    return prefix + offset + suffix;
+  }
+  function new_format(lk,fulllk,basename,offset) {
+    if(offset>=0) {
+	    return format_url( url_base + fulllk + "/forecast/cur/" + lk + basename + "+" , offset , ".png");
+    } else {
+	    return format_url( url_base + fulllk + "/cur/" + lk + basename + "-" , 0-offset , ".png");
+    }
+  }
+  function wind_and_currents(lk,fulllk,offset) {
+    var basename="wndcur";
+    return new_format(lk,fulllk,basename,offset-1);
+  }
+  function waves(lk,offset) {
+    var offset = offset > 0 ? offset : offset-7;
+    var addzero = "";
+    if( offset > -10 && offset < 10) {
+	  addzero="0";
+    }
+    if(offset>0) {
+	    return format_url( url_base + "/lakes/cur/" + lk + "wv+" + addzero , offset , ".gif" );
+    } else {
+	    return format_url( url_base + "/lakes/cur/" + lk + "wv-" + addzero , 0-offset , ".gif" );
+    }
+  }
+  function temperatures(lk,fulllk,offset) {
+    var basename="swt";
+    return new_format(lk,fulllk,basename,Math.floor((offset-1)/3));
+  }
+  function get_full_lake(lk) {
+    var fulllk;
+    if(lk == "o") {
+	fulllk="ontario_hires";
+    } else if(lk == "mh") {
+	fulllk="mich-huron";
+    } else if(lk == "e") {
+	fulllk="erie";
+    } else {
+	fulllk="superior_hires";
+    }
+    return fulllk;
+  }
   function showLake(lk) {
-  //preload images from -48 to 120
+    //preload images from -48 to 72
+  fulllk=get_full_lake(lk);
+
+
+
   var the_images = [];
   var cast = "";
-  for (var i = -48; i < 121; i++){
-	var offset = i;
-	if(offset > 9){
-		offset = "+"+offset;
-		cast="fcast";
-	}else if(offset > 0 && offset < 10){
-		offset = "+0"+offset
-				cast="fcast";
-	}else if(offset < 0 && offset > -10){
-		offset = "-0"+(i*(-1));
-		cast="ncast";
-	}else if(offset == 0){ //skip zero, avoid preload issues
-		offset = "+01";
-		i=1;
-		cast="fcast";
-	}
-    var temp_offset="+" + (parseInt(offset)+12);
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wv"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wn"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"swt"+ offset+".gif");
-    the_images.push("http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"sfcur"+ offset+".gif");
+  for (var i = min_hour; i < max_hour+1; i++){
+    var offset = i;
+    //the_images.push(wind_and_currents(lk,fulllk,offset));
+    the_images.push(waves(lk,offset));
+    the_images.push(temperatures(lk,fulllk,offset));
   }
   
 
@@ -63,32 +99,18 @@
       $( "#slider" ).slider({
 	  background: 100, 
       range: "min",
-      min: -48,
-      max: 120,
+      min: min_hour,
+      max: max_hour,
       value: 01,
 
       slide: function( event, ui ) {
-		var offset = ui.value;
-		if(offset > 9){
-			offset = "+"+offset;
-			cast="fcast";
-		}else if(offset > 0 && offset < 10){
-			offset = "+0"+offset
-			cast="fcast";
-		}else if(offset < 0 && offset > -10){
-			offset = "-0"+(offset*(-1));
-			cast="ncast";
-		}else if(offset == 0){ //skip zero, avoid preload issues
-			offset = "+01";
-			cast="fcast";
-		}
+        var offset = ui.value;
 
-        var temp_offset="+" + (parseInt(offset)+12);
         $("#amount").text( offset );
-        $("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wv"+ offset +".gif");
-        $("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"wn"+ offset +".gif"); 
-        $("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"swt"+ offset +".gif"); 
-        $("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/"+cast+"/"+lk+"sfcur"+ offset +".gif"); 
+        $("#wind").attr("src",wind_and_currents(lk,fulllk,offset));
+        $("#waves").attr("src",waves(lk,offset));
+        $("#temps").attr("src",temperatures(lk,fulllk,offset));
+        //$("#currents").attr("src",url_base +lk+"sfcur"+ offset +".gif"); 
 
 	// debug stuff:
         /*
@@ -100,10 +122,10 @@
       }
     });    
 
-	$("#waves").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"wv+01.gif");
-	$("#wind").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"wn+01.gif");        
-	$("#temps").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"swt+01.gif");        
-	$("#currents").attr("src","http://www.glerl.noaa.gov/res/glcfs/fcast/"+lk+"sfcur+01.gif");        
+	$("#wind").attr("src",wind_and_currents(lk,fulllk,1));
+	$("#waves").attr("src",waves(lk,1));
+	$("#temps").attr("src",temperatures(lk,fulllk,1));
+	//$("#currents").attr("src",url_base+lk+"sfcur+01.gif");        
 	
 	$("#graph_container").fadeIn(1000);
 
@@ -111,7 +133,7 @@
   
   
   	var loaded = 0;
-	var total = 168 *4;
+	var total = (max_hour - min_hour+1) *4;
   
   		jQuery.imgpreload(the_images,
 		{
@@ -142,9 +164,8 @@
 
 
   $(function() {
-	  $("#hlake").on('click', function () { showLake("h"); $("button.dropbtn").text("Lake Huron"); });
 	  $("#elake").on('click', function () { showLake("e"); $("button.dropbtn").text("Lake Erie"); });
-	  $("#mlake").on('click', function () { showLake("m"); $("button.dropbtn").text("Lake Michigan"); });
+	  $("#mhlake").on('click', function () { showLake("mh"); $("button.dropbtn").text("Lake Huron-Michigan"); });
 	  $("#slake").on('click', function () { showLake("s"); $("button.dropbtn").text("Lake Superior"); });
 	  $("#olake").on('click', function () { showLake("o"); $("button.dropbtn").text("Lake Ontario"); });
 	  showLake("o");
@@ -161,9 +182,8 @@
 	<button class="dropbtn">Lake Ontario</button>
 	<div class="dropdown-content">
 		<a id="olake" onclick="newLakeOnClick(this)">Ontario</a>
-		<a id="hlake" onclick="newLakeOnClick(this)">Huron</a>
+		<a id="mhlake" onclick="newLakeOnClick(this)">Huron-Michigan</a>
 		<a id="elake" onclick="newLakeOnClick(this)">Erie</a>
-		<a id="mlake" onclick="newLakeOnClick(this)">Michigan</a>
 		<a id="slake" onclick="newLakeOnClick(this)">Superior</a>
 	</div>
 </div>
@@ -176,40 +196,32 @@
 </div> 
 
 <p id="waves_title"> waves </p> 
-<p id="wind_title"> wind </p>
+<p id="wind_title"> wind + currents</p>
 
 
 <div style="clear:both;" ></div>
-<div id="graph_container">
+<div id="row">
+   <div id="graph_container">
 	<div class="container">
 		<img id="waves" class="graphs" src="#" alt=""/> 
 	</div>	
-	
-	<div class="container">
-		<img id="wind"  class="graphs" src="#" alt="" /> 
-
-	</div>	
-
-</div> 
-
-<div style="clear:both;" ></div>
-<p id="temps_title"> temperatures </p> 
-<p id="currents_title"> currents </p>
-
-<div style="clear:both;" ></div>
-<div id="graph_container2">
-
 	<div class="container">
 		<img id="temps"  class="graphs" src="#" alt="" /> 
 
 	</div>	
-
-	<div class="container">
-		<img id="currents"  class="graphs" src="#" alt="" /> 
+	
+   </div> 
+   <!-- <div style="clear:both;" ></div> -->
+   <div id="graph_container2">
+	<div class="doublecontainer">
+		<img id="wind"  class="graphs" src="#" alt="" /> 
 
 	</div>	
+   </div> 
 
-</div> 
+<div style="clear:both;" ></div>
+<p id="temps_title"> temperatures </p> 
+
 <div id="footer">
 <p >Images from <a href="http://www.glerl.noaa.gov/res/glcfs/" target="_blank">GLCFS by GLERL</a>.</p> 
 </div>

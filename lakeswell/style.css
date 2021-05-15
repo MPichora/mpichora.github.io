@@ -25,16 +25,32 @@
 		margin: 0px auto 10px auto;
     }
 
+        div.row {
+		display: flex;
+	}
 
 	div.container { 
+		flex: 50%;
 		width: 665px; 
 		height: 470px; 
 		overflow: hidden; 
-		float:left; 
+		/*float:left; */
 		position: relative;
 	}
 
 	.container img {  }
+
+	div.doublecontainer { 
+		flex: 50%;
+		width: 665px; 
+		height: 940px; 
+		overflow: hidden; 
+		float:left; 
+		position: relative;
+		z-index: 2;
+	}
+
+	.doublecontainer img {  }
 
   #waves{
 	margin: -70px 0px -50px -30px;  
@@ -56,12 +72,6 @@
   			z-index: 1;
   }
 
-  #currents{
-  	margin: -70px 0px -50px -30px;
-  		position: absolute;
-  			z-index: 1;
-  }
-  
     	
     #slider{
 		clear: both;
@@ -75,12 +85,14 @@
     }
 	
 	#graph_container{
-		width: 1600px;
+		width: 800px;
+		float: left;
 		display:none;
 	}
 
 	#graph_container2{
-		width: 1600px;
+		width: 800px;
+		float: left;
 		display:none;
 	}
 	
@@ -106,9 +118,6 @@
 		margin-left:200px;
 	}
 
-	p#currents_title{
-		margin-left:600px;
-	}
 
 	div#footer{
 		width:600px;
