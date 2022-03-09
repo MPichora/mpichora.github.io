@@ -9,6 +9,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
   <script type="text/javascript" src="jquery.imgpreload.js"></script>
   <script type="text/javascript" src="temp_lookup.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+	     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+	        crossorigin=""></script>
 
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
 
@@ -23,6 +29,7 @@
   <script>
 
   var url_base="https://www.glerl.noaa.gov/res/glcfs/";
+  var url_base2="https://www.glerl.noaa.gov/emf/";
   var max_hour= 71;
   var min_hour= -40;
 
@@ -52,14 +59,18 @@
   }
   function waves(lk,offset) {
     var offset = offset > 0 ? offset : offset-7;
-    var addzero = "";
-    if( offset > -10 && offset < 10) {
-	  addzero="0";
-    }
     if(offset>0) {
-	    return format_url( url_base + "/lakes/cur/" + lk + "wv+" + addzero , offset , ".gif" );
+	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3gl" + lk + "-" , offset , ".png" );
     } else {
-	    return format_url( url_base + "/lakes/cur/" + lk + "wv-" + addzero , 0-offset , ".gif" );
+	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3gl" + lk + "-" , 0-offset , ".png" );
+    }
+  }
+  function wind(lk,offset) {
+    var offset = offset > 0 ? offset : offset-7;
+    if(offset>0) {
+	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3wngl" + lk + "-" , offset , ".png" );
+    } else {
+	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3wngl" + lk + "-" , 0-offset , ".png" );
     }
   }
   function temperatures(lk,fulllk,offset) {
@@ -90,6 +101,7 @@
   for (var i = min_hour; i < max_hour+1; i++){
     var offset = i;
     //the_images.push(wind_and_currents(lk,fulllk,offset));
+    the_images.push(wind(lk,offset));
     the_images.push(waves(lk,offset));
     the_images.push(temperatures(lk,fulllk,offset));
   }
@@ -107,7 +119,7 @@
         var offset = ui.value;
 
         $("#amount").text( offset );
-        $("#wind").attr("src",wind_and_currents(lk,fulllk,offset));
+        $("#wind").attr("src",wind(lk,offset));
         $("#waves").attr("src",waves(lk,offset));
         $("#temps").attr("src",temperatures(lk,fulllk,offset));
         //$("#currents").attr("src",url_base +lk+"sfcur"+ offset +".gif"); 
@@ -122,7 +134,7 @@
       }
     });    
 
-	$("#wind").attr("src",wind_and_currents(lk,fulllk,1));
+	$("#wind").attr("src",wind(lk,1));
 	$("#waves").attr("src",waves(lk,1));
 	$("#temps").attr("src",temperatures(lk,fulllk,1));
 	//$("#currents").attr("src",url_base+lk+"sfcur+01.gif");        
@@ -169,6 +181,19 @@
 	  $("#slake").on('click', function () { showLake("s"); $("button.dropbtn").text("Lake Superior"); });
 	  $("#olake").on('click', function () { showLake("o"); $("button.dropbtn").text("Lake Ontario"); });
 	  showLake("o");
+
+	  var map = L.map('selectmap').setView([43.62655,-77.986635], 8);
+	  L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+		      subdomains: [ 'a', 'b', 'c' ]
+	  }).addTo(map);
+          L.marker([ lt, lg ])
+	      .addTo(map)
+	      .on( 'click', function (e) {
+		      console.log(e.latlng);
+		      location.href = "dygraphs.html";
+	      });
+
   });
   </script>
   
@@ -196,7 +221,7 @@
 </div> 
 
 <p id="waves_title"> waves </p> 
-<p id="wind_title"> wind + currents</p>
+<p id="wind_title"> winds </p>
 
 
 <div style="clear:both;" ></div>
@@ -211,12 +236,13 @@
 	</div>	
 	
    </div> 
-   <!-- <div style="clear:both;" ></div> -->
+   <!-- <div style="clear:both;" ></div>  -->
    <div id="graph_container2">
-	<div class="doublecontainer">
+	<div class="container">
 		<img id="wind"  class="graphs" src="#" alt="" /> 
 
 	</div>	
+	<div id="selectmap"></div>
    </div> 
 
 <div style="clear:both;" ></div>
@@ -227,12 +253,6 @@
 </div>
 
 
-<a href="https://www.accuweather.com/en/ca/burlington/l7s/weather-forecast/49566" class="aw-widget-legal">
-<!--
-By accessing and/or using this code snippet, you agree to AccuWeather’s terms and conditions (in English) which can be found at https://www.accuweather.com/en/free-weather-widgets/terms and AccuWeather’s Privacy Statement (in English) which can be found at https://www.accuweather.com/en/privacy.
--->
-</a><div id="awtd1522881865444" class="aw-widget-36hour"  data-locationkey="49566" data-unit="c" data-language="en-us" data-useip="false" data-uid="awtd1522881865444" data-editlocation="false"></div><script type="text/javascript" src="https://oap.accuweather.com/launch.js"></script>
- 
 </body>
 </html>
 

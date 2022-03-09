@@ -53,23 +53,29 @@
 	.doublecontainer img {  }
 
   #waves{
-	margin: -70px 0px -50px -30px;  
+	width: 100%;
+	margin: 0px 0px 0px 0px;  
 	position: absolute;
-			z-index: 1;
+	z-index: 1;
 
   }
 
   #temps{
 	margin: -70px 0px -50px -30px;  
 	position: absolute;
-			z-index: 1;
+	z-index: 1;
 
   }
 
   #wind{
-  	margin: -70px 0px -50px -30px;
-  		position: absolute;
-  			z-index: 1;
+	width: 100%;
+  	margin: 0px 0px 0px 0px;
+	position: absolute;
+	z-index: 1;
+  }
+
+  #selectmap{
+	height: 470px;
   }
 
     	
@@ -85,13 +91,13 @@
     }
 	
 	#graph_container{
-		width: 800px;
+		width: 720px;
 		float: left;
 		display:none;
 	}
 
 	#graph_container2{
-		width: 800px;
+		width: 720px;
 		float: left;
 		display:none;
 	}

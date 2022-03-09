@@ -1,0 +1,196 @@
+<html>
+<head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.js" integrity="sha512-JRLUjih5kZmLwc+9kvJK8trS/iGBuTcwVfYKOqpHLfLSrjiTfyYD9p03gYwOXoY4Kw/xd1xaAmVdNVG1LHKn/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="synchronizer.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.css" integrity="sha512-QG68tUGWKc1ItPqaThfgSFbubTc+hBv4OW/4W1pGi0HHO5KmijzXzLEOlEbbdfDtVT7t7mOohcOrRC5mxKuaHA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.13/moment-timezone-with-data-2012-2022.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+<script>
+
+const lg=-79.7310;
+const lt=43.2795;
+
+const sc=SunCalc.getTimes(new Date(), lt, lg);
+
+
+
+
+function plotBands_for_score(starttime,scores) {
+  var resArr = [];
+  const sunrise = sc.sunrise.getHours()*60 + sc.sunrise.getMinutes();
+  const sunset = sc.sunset.getHours()*60 + sc.sunset.getMinutes();
+  const score_threshold = 0.52; // bit subjective here
+  const green = 'rgba(35,220,35,0.22)';
+  var ts = starttime;
+  var is_green = false;
+  var d1;
+  for(var i=0; i<scores.length; i++) {
+    var d_ts = new Date(ts);
+    var d_ts_minute = d_ts.getHours()*60;
+    if(d_ts_minute >= sunrise && d_ts_minute < sunset) {
+      if(!is_green && scores[i] >= score_threshold) {
+	 is_green = true;
+	 d1 = d_ts;
+      } else if (is_green && scores[i]< score_threshold) {
+	 is_green = false;
+	 resArr.push({
+	    from: d1,
+            to: new Date(ts - 1800*1000),
+            color: green
+	 });
+      }
+    } else {
+      if(is_green) {
+         is_green = false;
+	 resArr.push({
+	    from: d1,
+            to: new Date(ts - 1800*1000),
+            color: green
+	 });
+      }
+    }
+    ts += 3600 * 1000;
+  }
+  if(is_green) {
+    is_green = false;
+    resArr.push({
+	    from: d1,
+            to: new Date(ts - 1800*1000),
+            color: green
+    });
+  }
+  return resArr;
+}
+
+function plotBands_for_night(starttime,numHours) {
+  var resArr = [ ];
+  console.log("pb for night " + starttime + " " + numHours);
+  var ts = starttime;
+  var is_dark = false;
+  var d1;
+  const sunrise = sc.sunrise.getHours()*60 + sc.sunrise.getMinutes();
+  const sunset = sc.sunset.getHours()*60 + sc.sunset.getMinutes();
+  for(var i=0; i< numHours; i++) {
+    var d_ts = new Date(ts);
+	  if(!is_dark && d_ts.getHours()*60>sunset) {
+		  is_dark = true;
+		  d1=d_ts;
+	  } else if (is_dark && d_ts.getHours()*60 >=sunrise && d_ts.getHours()*60 < sunset) {
+		  is_dark = false;
+		  if(typeof d1 !== 'undefined' ) {
+			  const new_band = {
+				  from: d1,
+				  to: d_ts,
+				  color: 'rgba(180,180,180,0.1)'
+			  };
+			  resArr.push(new_band);
+		  }
+	  }
+    ts+= 3600 * 1000;
+  }
+  if(is_dark && d1 < d_ts) {
+	  const new_band = {
+		  from: d1,
+		  to: d_ts,
+		  color: 'rgba(180,180,180,0.1)'
+	  };
+  }
+  return resArr;
+}
+
+$(document).ready(function() {
+  const url = 'http://127.0.0.1:5000/weatherwindwaves.json';
+  $.getJSON(url, function(data) {
+     data.imperialSeries[0].okvalue = 6; // knots
+     data.imperialSeries[0].oklabel = "calm";
+     data.imperialSeries[1].okvalue = 0.3; // feet
+     data.imperialSeries[1].oklabel = "still";
+     data.imperialSeries[2].okvalue = 5; // celsius
+     data.imperialSeries[2].oklabel = "warm enough";
+     data.imperialSeries[3].okvalue = 3.1; // m/s
+     data.imperialSeries[3].oklabel = "calm";
+     data.imperialSeries[4].okvalue = 270; // deg
+     data.imperialSeries[4].oklabel = "ideal";
+     data.imperialSeries[5].okvalue = 1.0; // score
+     data.imperialSeries[5].oklabel = "ideal";
+
+     const pb_for_night = plotBands_for_night(data.pointStart, data.imperialSeries[0].data.length);
+     const pb_for_score = plotBands_for_score(data.pointStart, data.scoreSeries);
+     var pb = [];
+     pb_for_night.forEach(function (x,i) { pb.push(x); });
+     pb_for_score.forEach(function (x,i) { pb.push(x); });
+
+     var dgs = [ ];
+
+     data.imperialSeries.forEach( function (x,i) {
+        var dataArr = [ ];
+        var ts = data.pointStart;
+	for(var j=0; j < x.data.length; j++) {
+	   var y = x.data[j];
+	   var pt = [new Date(ts),y,x.okvalue];
+	   if(x.data2) {
+	      pt.push(x.data2[j]);
+	   }
+	   dataArr.push(pt);
+	   ts += data.pointInterval;
+	}
+	var labels = [ 'Date', x.name, x.oklabel ];
+	if(x.name2) {
+	   labels.push(x.name2);
+	}
+	console.log('attaching dygraph for ' + x.name + ' to div_g_' + i);
+        var dg = new Dygraph(
+	   document.getElementById('div_g_' + i),
+	   dataArr,
+	   {
+		ylabel: x.name,
+		strokeWidth: 2,
+		labels: labels,
+		underlayCallback: function (canvas, area, g) {
+			pb.forEach( function(x,i) {
+			    canvas.fillStyle = x.color;
+			    var canvas_left_x = g.toDomXCoord(x.from);
+			    var canvas_right_x = g.toDomXCoord(x.to);
+			    var canvas_width = canvas_right_x - canvas_left_x;
+			    canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
+			});
+		}
+	  });
+	dgs.push(dg);
+	/*dg.setAnnotations([{ 
+	   series: x.oklabel,
+	   x: new Date(data.pointStart),
+	   shortText: x.oklabel,
+	   text: x.oklabel
+	}]);*/
+     });
+     Dygraph.synchronize(dgs);
+  });
+});
+
+
+	</script>
+	</head>
+	<body>
+
+		<h2> Burlington, ON - Conditions</h2>
+
+		    <div id="container"></div>
+		    <div id="div_g_0" style=" height:200px;"></div>
+		    <div id="div_g_1" style=" height:200px;"></div>
+		    <div id="div_g_2" style=" height:200px;"></div>
+		    <div id="div_g_3" style=" height:200px;"></div>
+		    <div id="div_g_4" style=" height:200px;"></div>
+		    <div id="div_g_5" style=" height:200px;"></div>
+		<p/>
+
+		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_burl_big.png" />
+		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_burl_big.png" />
+		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_burl_big.png" />
+
+		<p/>
+		<iframe title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-95&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
+	</body>
+</html>
