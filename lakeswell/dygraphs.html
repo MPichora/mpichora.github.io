@@ -101,7 +101,7 @@ function plotBands_for_night(starttime,numHours) {
 }
 
 $(document).ready(function() {
-  const url = 'http://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json';
+  const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json';
   $.getJSON(url, function(data) {
      data.imperialSeries[0].okvalue = 6; // knots
      data.imperialSeries[0].oklabel = "calm";
