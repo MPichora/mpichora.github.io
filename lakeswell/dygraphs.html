@@ -19,14 +19,15 @@ var wug= urlParams.get('wug');
 if(!wug || wug === '') {
    wug = placeName;
 }
-console.log("wug is ", wug);
 const wunderground='https://www.wunderground.com/forecast/ca/' + wug;
 const windy='https://www.windy.com/' + (urlParams.get('windy'));
-//const lg=-79.7310;
-//const lt=43.2795;
+const loofs=urlParams.get('loofs');
+const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_';
+const loofs_wl_url=loofs_prefix + 'wl_' + loofs + "_big.png";
+const loofs_wind_url=loofs_prefix + 'wind_' + loofs + "_big.png";
+const loofs_temp_url=loofs_prefix + 'temp_' + loofs + "_big.png";
 
 const sc=SunCalc.getTimes(new Date(), lt, lg);
-
 
 
 
@@ -118,15 +119,10 @@ $(document).ready(function() {
   $( '#eciframe' ).attr( 'src', 'https://weather.gc.ca/wxlink/wxlink.html?cityCode=' + ecplace + '&amp;lang=e');
   $( '#wunderground').html('<a href="' + wunderground + '">WUG</a> ');
   $( '#windy').html(' <a href="' + windy + '">Wdy</a>');
-  if(placeName === 'Burlington' || placeName === 'Bronte') {
-     $( '#div_loofs' ).html( ' <img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_burl_big.png" /> ' +
-		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_burl_big.png" />' +
-		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_burl_big.png" />' );
-  } else {
-     $( '#div_loofs' ).html( ' <img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_buo2_big.png" /> ' +
-		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_buo2_big.png" />' +
-		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_buo2_big.png" />' );
-  }
+  $( '#div_loofs' ).html( ' <img src="' + loofs_wind_url + '" /> ' +
+		'<img src="' + loofs_wl_url + '" />' +
+		'<img src="' + loofs_temp_url + '" />' +
+		   '<img src="wetsuit-temp-guide.svg" height=500 />');
   const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json?suffix='+suffix;
   $.getJSON(url, function(data) {
      data.imperialSeries[0].okvalue = 6; // knots
@@ -192,7 +188,10 @@ $(document).ready(function() {
 	   text: x.oklabel
 	}]);*/
      });
-     Dygraph.synchronize(dgs);
+     Dygraph.synchronize(dgs, { 
+	     zoom: false,
+	     range: true
+     });
   });
 });
 
