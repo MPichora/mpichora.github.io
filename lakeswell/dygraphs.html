@@ -26,6 +26,7 @@ const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraph
 const loofs_wl_url=loofs_prefix + 'wl_' + loofs + "_big.png";
 const loofs_wind_url=loofs_prefix + 'wind_' + loofs + "_big.png";
 const loofs_temp_url=loofs_prefix + 'temp_' + loofs + "_big.png";
+const ideal_wind_dir = parseInt(urlParams.get('iwd'));
 
 const sc=SunCalc.getTimes(new Date(), lt, lg);
 
@@ -123,7 +124,7 @@ $(document).ready(function() {
 		'<img src="' + loofs_wl_url + '" />' +
 		'<img src="' + loofs_temp_url + '" />' +
 		   '<img src="wetsuit-temp-guide.svg" height=500 />');
-  const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json?suffix='+suffix;
+  const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json?suffix='+suffix + '&iwd=' + ideal_wind_dir;
   $.getJSON(url, function(data) {
      data.imperialSeries[0].okvalue = 6; // knots
      data.imperialSeries[0].oklabel = "calm";
@@ -133,7 +134,7 @@ $(document).ready(function() {
      data.imperialSeries[2].oklabel = "warm enough";
      data.imperialSeries[3].okvalue = 3.1; // m/s
      data.imperialSeries[3].oklabel = "calm";
-     data.imperialSeries[4].okvalue = 270; // deg
+     data.imperialSeries[4].okvalue = ideal_wind_dir; // deg
      data.imperialSeries[4].oklabel = "ideal";
      data.imperialSeries[5].okvalue = 1.0; // score
      data.imperialSeries[5].oklabel = "ideal";

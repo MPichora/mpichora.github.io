@@ -217,6 +217,7 @@
 		      suffix:'-79.79-43.31.txt', 
 		      eccode:'on-95', 
 		      loofs:'burl',
+		      ideal_wind_dir: 270,
 		      windy:'43.309/-79.800?43.225,-79.761,12' 
 	      }, { 
 		      lake: 'o', 
@@ -225,6 +226,7 @@
 		      suffix:'-79.62-43.23.txt', 
 		      eccode:'on-77', 
 		      loofs:'buo2',
+		      ideal_wind_dir: (360-22),
 		      wug:'hamilton', 
 		      windy:'43.208/-79.651?43.201,-79.651,12' 
 	      }, { 
@@ -234,6 +236,7 @@
 		      suffix:'-79.71-43.39.txt', 
 		      eccode:'on-79', 
 		      loofs:'burl',
+		      ideal_wind_dir: 233,
 		      wug:'oakville', 
 		      windy: '43.407/-79.727?43.400,-79.727,12' 
 	      }, { 
@@ -243,6 +246,7 @@
 		      suffix:'-79.66-43.44.txt', 
 		      eccode:'on-79',  
 		      loofs:'buo2',
+		      ideal_wind_dir: 233,
 		      windy:'43.447/-79.667?43.419,-79.667,12' 
 	      }, { 
 		      lake: 'o', 
@@ -252,6 +256,7 @@
 		      eccode:'on-24', 
 		      loofs:'buo2',
 		      wug:'mississauga', 
+		      ideal_wind_dir: 233,
 		      windy:'43.554/-79.584?43.526,-79.584,12' 
 	      }];
 	  placemap.forEach( function (place,ii) {
@@ -267,7 +272,8 @@
 				+ "&wug=" + place.wug
 				+ "&windy=" + place.windy
 				+ "&loofs=" + place.loofs
-			  ;
+				+ "&iwd=" + place.ideal_wind_dir
+			      ;
 	          });
 	  });
 
