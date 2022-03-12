@@ -27,7 +27,7 @@
 
 
   <script>
-
+  var map;
   var url_base="https://www.glerl.noaa.gov/res/glcfs/";
   var url_base2="https://www.glerl.noaa.gov/emf/";
   var max_hour= 71;
@@ -81,11 +81,13 @@
     var fulllk;
     if(lk == "o") {
 	fulllk="ontario_hires";
-    } else if(lk == "mh") {
-	fulllk="mich-huron";
+    } else if(lk == "m") {
+	fulllk="mich";
+    } else if(lk == "h") {
+	fulllk="huron";
     } else if(lk == "e") {
 	fulllk="erie";
-    } else {
+    } else { // "s"
 	fulllk="superior_hires";
     }
     return fulllk;
@@ -94,6 +96,23 @@
     //preload images from -48 to 72
   fulllk=get_full_lake(lk);
 
+  if(map) {
+    const lakemap = [ 
+	  { name: 'o', lng: 43.62655, lat: -77.986635, zoom: 8 }, 
+	  { name: 'm', lng: 43.50048, lat: -87.24812, zoom: 7 },
+	  { name: 'e', lng: 42.12228, lat: -81.364878, zoom: 8 },
+	  { name: 's', lng: 47.781458, lat: -87.16837, zoom: 7 },
+	  { name: 'h', lng: 45.02780, lat: -82.41437, zooom: 7 }
+	  ];
+    var lake;
+    for(var k=0; k<lakemap.length; k++) {
+	  if(lakemap[k].name === lk) {
+		  lake = lakemap[k];
+		  break;
+	  }
+    }
+    map.setView([lake.lng,lake.lat],lake.zoom);
+  }
 
 
   var the_images = [];
@@ -177,23 +196,46 @@
 
   $(function() {
 	  $("#elake").on('click', function () { showLake("e"); $("button.dropbtn").text("Lake Erie"); });
-	  $("#mhlake").on('click', function () { showLake("mh"); $("button.dropbtn").text("Lake Huron-Michigan"); });
+	  $("#mlake").on('click', function () { showLake("m"); $("button.dropbtn").text("Lake Michigan"); });
+	  $("#hlake").on('click', function () { showLake("h"); $("button.dropbtn").text("Lake Huron"); });
 	  $("#slake").on('click', function () { showLake("s"); $("button.dropbtn").text("Lake Superior"); });
 	  $("#olake").on('click', function () { showLake("o"); $("button.dropbtn").text("Lake Ontario"); });
-	  showLake("o");
 
-	  var map = L.map('selectmap').setView([43.62655,-77.986635], 8);
+	  map = L.map('selectmap').setView([43.62655,-77.986635], 8);
 	  L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 		      subdomains: [ 'a', 'b', 'c' ]
 	  }).addTo(map);
-          L.marker([ lt, lg ])
-	      .addTo(map)
-	      .on( 'click', function (e) {
-		      console.log(e.latlng);
-		      location.href = "dygraphs.html";
-	      });
+	  showLake("o");
 
+	  // place specific locations here
+	  const placemap = [
+	      { lake: 'o', name:'Burlington',  coord: [43.297799,-79.793822], suffix:'-79.79-43.31.txt', eccode:'on-95', windy:'43.309/-79.800?43.225,-79.761,12' },
+	      { lake: 'o', name:'Fifty point', coord: [43.2246226, -79.618827], suffix:'-79.62-43.23.txt', eccode:'on-77', wug:'hamilton', windy:'43.208/-79.651?43.201,-79.651,12' },
+	      { lake: 'o', name:'Bronte',      coord: [43.3922,-79.709836], suffix:'-79.71-43.39.txt', eccode:'on-79', wug:'oakville', windy: '43.407/-79.727?43.400,-79.727,12' },
+	      { lake: 'o', name:'Oakville',    coord: [43.44136368, -79.6671526], suffix:'-79.66-43.44.txt', eccode:'on-79', windy:'43.447/-79.667?43.419,-79.667,12' },
+	      { lake: 'o', name:'Port Credit', coord: [43.549955, -79.5858134], suffix:'-79.57-43.54.txt', eccode:'on-24', wug:'mississauga', windy:'43.554/-79.584?43.526,-79.584,12' }
+	      ];
+	  placemap.forEach( function (place,ii) {
+              L.marker(place.coord)
+	          .addTo(map)
+	          .on( 'click', function (e) {
+		          console.log(e.latlng);
+		          location.href = 'dygraphs.html?location=' + place.name
+				+ "&lng=" + place.coord[1]
+			        + "&lat=" + place.coord[0]
+				+ "&suffix=" + place.suffix
+				+ "&eccode=" + place.eccode
+				+ "&wug=" + place.wug
+				+ "&windy=" + place.windy;
+	          });
+	  });
+
+
+	  // trigger draw of map
+          setTimeout(() => {
+	             map.invalidateSize();
+	  }, 200);
   });
   </script>
   
@@ -207,7 +249,8 @@
 	<button class="dropbtn">Lake Ontario</button>
 	<div class="dropdown-content">
 		<a id="olake" onclick="newLakeOnClick(this)">Ontario</a>
-		<a id="mhlake" onclick="newLakeOnClick(this)">Huron-Michigan</a>
+		<a id="mlake" onclick="newLakeOnClick(this)">Michigan</a>
+		<a id="hlake" onclick="newLakeOnClick(this)">Huron</a>
 		<a id="elake" onclick="newLakeOnClick(this)">Erie</a>
 		<a id="slake" onclick="newLakeOnClick(this)">Superior</a>
 	</div>
@@ -248,8 +291,12 @@
 <div style="clear:both;" ></div>
 <p id="temps_title"> temperatures </p> 
 
+<br/>
+<p><a href="https://tidesandcurrents.noaa.gov/ofs/dev/ofs_animation.shtml?ofsregion=lo&subdomain=0&model_type=wind_forecast"> OFS Wind Forecast</a> </p>
+
 <div id="footer">
 <p >Images from <a href="http://www.glerl.noaa.gov/res/glcfs/" target="_blank">GLCFS by GLERL</a>.</p> 
+<p> Weather data from <a href="
 </div>
 
 

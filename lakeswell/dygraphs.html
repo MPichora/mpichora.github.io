@@ -9,8 +9,21 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
 <script>
 
-const lg=-79.7310;
-const lt=43.2795;
+const urlParams = new URLSearchParams(window.location.search);
+const placeName = urlParams.get('location');
+const lg=urlParams.get('lng');
+const lt=urlParams.get('lat');
+const suffix=urlParams.get('suffix');
+const ecplace=urlParams.get('eccode');
+var wug= urlParams.get('wug');
+if(!wug || wug === '') {
+   wug = placeName;
+}
+console.log("wug is ", wug);
+const wunderground='https://www.wunderground.com/forecast/ca/' + wug;
+const windy='https://www.windy.com/' + (urlParams.get('windy'));
+//const lg=-79.7310;
+//const lt=43.2795;
 
 const sc=SunCalc.getTimes(new Date(), lt, lg);
 
@@ -101,7 +114,20 @@ function plotBands_for_night(starttime,numHours) {
 }
 
 $(document).ready(function() {
-  const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json';
+  $( '#placename' ).text( placeName );
+  $( '#eciframe' ).attr( 'src', 'https://weather.gc.ca/wxlink/wxlink.html?cityCode=' + ecplace + '&amp;lang=e');
+  $( '#wunderground').html('<a href="' + wunderground + '">WUG</a> ');
+  $( '#windy').html(' <a href="' + windy + '">Wdy</a>');
+  if(placeName === 'Burlington' || placeName === 'Bronte') {
+     $( '#div_loofs' ).html( ' <img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_burl_big.png" /> ' +
+		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_burl_big.png" />' +
+		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_burl_big.png" />' );
+  } else {
+     $( '#div_loofs' ).html( ' <img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_buo2_big.png" /> ' +
+		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_buo2_big.png" />' +
+		'<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_buo2_big.png" />' );
+  }
+  const url = 'https://flawless-kindhearted-veterinarian.glitch.me/weatherwindwaves.json?suffix='+suffix;
   $.getJSON(url, function(data) {
      data.imperialSeries[0].okvalue = 6; // knots
      data.imperialSeries[0].oklabel = "calm";
@@ -175,7 +201,7 @@ $(document).ready(function() {
 	</head>
 	<body>
 
-		<h2> Burlington, ON - Conditions</h2>
+		<h2> <b id="placename"></b>,ON - Conditions <b id="wunderground"></b> <b id="windy"></b></h2>
 
 		    <div id="container"></div>
 		    <div id="div_g_0" style=" height:200px;"></div>
@@ -186,11 +212,9 @@ $(document).ready(function() {
 		    <div id="div_g_5" style=" height:200px;"></div>
 		<p/>
 
-		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wind_burl_big.png" />
-		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_wl_burl_big.png" />
-		<img src="https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_temp_burl_big.png" />
+		<div id="div_loofs"> </div>
 
 		<p/>
-		<iframe title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-95&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
+		<iframe id="eciframe" title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-95&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
 	</body>
 </html>
