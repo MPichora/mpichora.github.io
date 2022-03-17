@@ -22,10 +22,10 @@ if(!wug || wug === '') {
 const wunderground='https://www.wunderground.com/forecast/ca/' + wug;
 const windy='https://www.windy.com/' + (urlParams.get('windy'));
 const loofs=urlParams.get('loofs');
-const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/dev/ofs/loofs/wwwgraphics/LOOFS_';
-const loofs_wl_url=loofs_prefix + 'wl_' + loofs + "_big.png";
-const loofs_wind_url=loofs_prefix + 'wind_' + loofs + "_big.png";
-const loofs_temp_url=loofs_prefix + 'temp_' + loofs + "_big.png";
+const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/ofs/';
+const loofs_wl_url=  loofs_prefix + loofs.replace('{XTYPE}','wl') + "_big.png";
+const loofs_wind_url=loofs_prefix + loofs.replace('{XTYPE}','wind') + "_big.png";
+const loofs_temp_url=loofs_prefix + loofs.replace('{XTYPE}','temp') + "_big.png";
 const ideal_wind_dir = parseInt(urlParams.get('iwd'));
 
 const sc=SunCalc.getTimes(new Date(), lt, lg);
@@ -202,6 +202,8 @@ $(document).ready(function() {
 	<body>
 
 		<h2> <b id="placename"></b>,ON - Conditions <b id="wunderground"></b> <b id="windy"></b></h2>
+
+		<i>GLERL data is empty if the lake is frozen</i> <i style="color:black; background-color: lightgreen;"> Ideal Flatwater Conditions (score highlight)</i> 
 
 		    <div id="container"></div>
 		    <div id="div_g_0" style=" height:200px;"></div>
