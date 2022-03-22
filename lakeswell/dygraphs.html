@@ -190,8 +190,9 @@ $(document).ready(function() {
 	}]);*/
      });
      Dygraph.synchronize(dgs, { 
-	     zoom: false,
-	     range: true
+	     zoom: true,
+	     range: false,
+		 selection: true
      });
   });
 });
