@@ -75,7 +75,13 @@
   }
   function temperatures(lk,fulllk,offset) {
     var basename="swt";
-    return new_format(lk,fulllk,basename,Math.floor((offset-1)/3));
+	var lk2 = lk;
+	var fulllk2 = fulllk;
+	if(lk === "m" || lk == "h") {
+		lk2 = "mh";
+		fulllk2 = "mich-huron";
+	}
+    return new_format(lk2,fulllk2,basename,Math.floor((offset-1)/3));
   }
   function get_full_lake(lk) {
     var fulllk;
@@ -99,10 +105,10 @@
   if(map) {
     const lakemap = [ 
 	  { name: 'o', lng: 43.62655, lat: -77.986635, zoom: 8 }, 
-	  { name: 'm', lng: 43.50048, lat: -87.24812, zoom: 7 },
-	  { name: 'e', lng: 42.12228, lat: -81.364878, zoom: 8 },
+	  { name: 'm', lng: 43.50048, lat: -87.24812, zoom: 6 },
+	  { name: 'e', lng: 42.12228, lat: -81.364878, zoom: 7 },
 	  { name: 's', lng: 47.781458, lat: -87.16837, zoom: 7 },
-	  { name: 'h', lng: 45.02780, lat: -82.41437, zooom: 7 }
+	  { name: 'h', lng: 45.02780, lat: -82.41437, zooom: 6 }
 	  ];
     var lake;
     for(var k=0; k<lakemap.length; k++) {
