@@ -132,7 +132,7 @@ $(document).ready(function() {
   const wunderground='https://www.wunderground.com/forecast/ca/' + wug;
   const windy='https://www.windy.com/' + (locationdata[0].windy);
   const loofs=locationdata[0].loofs;
-  const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/ofs/';
+  const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/' + (locationdata[0].lake === 'o' ? 'dev/' : '') + 'ofs/';
   const loofs_wl_url=  loofs_prefix + loofs.replace('{XTYPE}','wl') + "_big.png";
   const loofs_wind_url=loofs_prefix + loofs.replace('{XTYPE}','wind') + "_big.png";
   const loofs_temp_url=loofs_prefix + loofs.replace('{XTYPE}','temp') + "_big.png";
