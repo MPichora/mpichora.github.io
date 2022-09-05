@@ -39,6 +39,7 @@
   <script>
   var map;
   var location_marker_map = []; // from location name -> marker
+  var all_locations = [];
   var good_location_times = []; // from index (int) -> location name
   var time_of_index = function (x) { return '' + x + ' index'; }; // default
   var url_base="https://www.glerl.noaa.gov/res/glcfs/";
@@ -179,9 +180,9 @@
     the_images.push(temperatures(lk,fulllk,offset));
   }
 
-  var lakes = [ 'o' ]; //, 'e', 'm', 'h', 's'];
+  var lakes = [ 'o', 'e', 'm', 'h', 's'];
   lakes.forEach(function (lk) {
-	  var allItems;
+    var allItems;
     $.getJSON(glservice_prefix + 'lakescores.json?lake=' + lk,function (data) {
 	    if(!allItems) {
 			allItems = [];
@@ -194,10 +195,13 @@
 			});
 			console.log("all items for lake " + lk + " are " + allItems);
 	    }
-	    time_of_index = function (ii) {
-		  var ts = data.pointStart + data.pointInterval*ii;
-		  return '' + (new Date(ts));
-	    };
+	    if(data.pointInterval) {
+	      time_of_index = function (ii) {
+		    var ts = data.pointStart + data.pointInterval*ii;
+		    return '' + (new Date(ts));
+	      };
+	    }
+	    var did_indexes = []; // for this lake
 	    data.goodScores.forEach( function (xx) {
 		  var i = (xx.ts - data.pointStart)/data.pointInterval;
 		  var badItems = [];
@@ -206,8 +210,43 @@
 					badItems.push(yy);
 				}
 		  });
-		  good_location_times.push({ idx: i, greenItems: xx.good, orangeItems: badItems });
+		  //console.log(" at " + i + " good items are " + xx.good + "   bad items are " + badItems);
+		  var glt_found = good_location_times.find( (glt) => glt.idx === i);
+		  if(glt_found) {
+		    xx.good.forEach( (y) => 
+			    { 
+				  if(!glt_found.greenItems.find((x_) => x_ === y) ) { 
+					glt_found.greenItems.push(y); 
+				  }
+			    });
+		    badItems.forEach( (y) => 
+			    {
+				  if(!glt_found.orangeItems.find((x_) => x_ === y ) ) {
+					glt_found.orangeItems.push(y);
+				  }
+				});
+		  } else {
+		    good_location_times.push({ idx: i, ts: xx.ts, greenItems: xx.good, orangeItems: badItems });
+		  }
+		  did_indexes.push(i);
 	    });
+	    for(var i=0; i< 72; i++) {
+	       var ind_found = did_indexes.find( (ii) => ii === i);
+	       if(!ind_found) {
+		  var glt_found = good_location_times.find( (glt) => glt.idx === i);
+		  if(glt_found) {
+		     allItems.forEach( (y) => 
+			    {
+				  if(!glt_found.orangeItems.find((x_) => x_ === y ) ) {
+					glt_found.orangeItems.push(y);
+				  }
+				});
+		  } else {
+			 var tslocal = i* data.pointInterval + data.pointStart;
+		     good_location_times.push({idx: i, ts: tslocal, greenItems: [], orangeItems: allItems});
+		  }
+	       }
+	    } 
     });
   });
   
@@ -227,9 +266,9 @@
         $("#temps").attr("src",temperatures(lk,fulllk,offset));
 		$('#text_time').html('<strong> at ' + (time_of_index(offset)) + '</strong>');
 		if(good_location_times && good_location_times.length >0) {
-            var allItems = [ ];
-		    good_location_times[0].greenItems.forEach( (oi) => allItems.push(oi));
-		    good_location_times[0].orangeItems.forEach( (oi) => allItems.push(oi));
+			var allItems = all_locations;
+		    //good_location_times[0].greenItems.forEach( (oi) => allItems.push(oi));
+		    //good_location_times[0].orangeItems.forEach( (oi) => allItems.push(oi));
 		    var found = good_location_times.find( (rec) => rec.idx === offset);
 		    if(!found) {
 				found = { orangeItems: allItems, greenItems: [], greyItems: [] };
@@ -240,9 +279,9 @@
 			if(ds.getHours() < sc.sunrise.getHours() || ds.getHours() > sc.sunset.getHours()) {
 				found = { orangeItems: [], greenItems: [], greyItems: allItems };
 			}
-			/*console.log('at ' + offset + '(' + ds + ') green items are ' + found.greenItems 
+			console.log('at ' + offset + '(' + ds + ')(' + found.ts + ') green items are ' + found.greenItems 
 				+ '   orangeItems are ' + found.orangeItems
-				+ '   greyItems are ' + found.greyItems); */
+				+ '   greyItems are ' + found.greyItems); 
 			if(location_marker_map) {
 				found.greenItems.forEach( function(placename) {
 					var fdm = location_marker_map.find( (rec) => rec.name === placename);
@@ -357,15 +396,18 @@
 					;
 				});
 				location_marker_map.push({ name: place.name, marker: marker });
+				if( !all_locations.find( (yy) => yy === place.name) ) {
+					all_locations.push(place.name);
+				}
 		});
 
 	  });
 
 
 	  // trigger draw of map
-          setTimeout(() => {
+      setTimeout(() => {
 	             map.invalidateSize();
-	  }, 200);
+	    }, 200);
   });
   </script>
   
