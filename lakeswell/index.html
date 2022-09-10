@@ -102,6 +102,21 @@
 	    return format_url( url_base + fulllk + "/cur/" + lk + basename + "-" , 0-offset , ".png");
     }
   }
+  function new_format2(fulllk,basename,offset) { // funky math for temp frames
+	var rest = '';
+	var real_offset = 0;
+	if(offset>=0) {
+		real_offset = Math.floor(offset/3 + 49);
+	} else {
+        real_offset = 49 + offset;
+	}
+	if(real_offset <= 0) {
+		rest = '/temp.png';
+	} else {
+        rest = '/frames/temp_' + real_offset + '.png';
+	}
+	return  (url_base + fulllk + rest);
+  }
   function wind_and_currents(lk,fulllk,offset) {
     var basename="wndcur";
     return new_format(lk,fulllk,basename,offset-1);
@@ -122,16 +137,6 @@
 	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3wngl" + lk + "-" , 0-offset , ".png" );
     }
   }
-  function temperatures(lk,fulllk,offset) {
-    var basename="swt";
-	var lk2 = lk;
-	var fulllk2 = fulllk;
-	if(lk === "m" || lk == "h") {
-		lk2 = "mh";
-		fulllk2 = "mich-huron";
-	}
-    return new_format(lk2,fulllk2,basename,Math.floor((offset-1)/3));
-  }
   function get_full_lake(lk) {
     var fulllk;
     if(lk == "o") {
@@ -147,6 +152,29 @@
     }
     return fulllk;
   }
+  function get_full_lake2(lk) {
+    var fulllk;
+    if(lk == "o") {
+	fulllk="ont";
+    } else if(lk == "m") {
+	fulllk="mih";
+    } else if(lk == "h") {
+	fulllk="mih";
+    } else if(lk == "e") {
+	fulllk="eri";
+    } else { // "s"
+	fulllk="sup";
+    }
+    return fulllk;
+  }
+
+  function temperatures(lk,fulllk,offset) {
+    var basename="swt";
+	var lk2 = lk;
+	var fulllk2 = get_full_lake2(lk);
+    return new_format2(fulllk2,basename,(offset-1));
+  }
+  
   function showLake(lk) {
     //preload images from -48 to 72
   fulllk=get_full_lake(lk);
