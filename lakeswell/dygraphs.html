@@ -1,19 +1,32 @@
 <html>
 <head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-4J9J7QPK7C"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-4J9J7QPK7C');
+	</script>
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.js" integrity="sha512-JRLUjih5kZmLwc+9kvJK8trS/iGBuTcwVfYKOqpHLfLSrjiTfyYD9p03gYwOXoY4Kw/xd1xaAmVdNVG1LHKn/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src="synchronizer.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.css" integrity="sha512-QG68tUGWKc1ItPqaThfgSFbubTc+hBv4OW/4W1pGi0HHO5KmijzXzLEOlEbbdfDtVT7t7mOohcOrRC5mxKuaHA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.13/moment-timezone-with-data-2012-2022.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon"> 
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <script>
 
-const lg=-79.7310;
-const lt=43.2795;
+const urlParams = new URLSearchParams(window.location.search);
+const namekey = urlParams.get('location');
 
-const sc=SunCalc.getTimes(new Date(), lt, lg);
 
+var sc; //=SunCalc.getTimes(new Date(), lt, lg);
 
 
 
@@ -100,55 +113,87 @@ function plotBands_for_night(starttime,numHours) {
   return resArr;
 }
 
+const glservice_prefix = 'https://flawless-kindhearted-veterinarian.glitch.me/';
+// const glservice_prefix = 'https://127.0.0.1:5000/';
+
 $(document).ready(function() {
-  const url = 'http://127.0.0.1:5000/weatherwindwaves.json';
+  $.getJSON(glservice_prefix + 'conditionLocations.json?namekey=' + namekey, function (locationdata) {
+
+  const placeName = namekey
+  const lt=locationdata[0].coord[0];
+  const lg=locationdata[0].coord[1]
+  sc=SunCalc.getTimes(new Date(), lt, lg);
+  const suffix=locationdata[0].suffix;
+  const ecplace=locationdata[0].eccode;
+  var wug=locationdata[0].wug;
+  if(!wug || wug === '') {
+     wug = placeName;
+  }
+  const wunderground='https://www.wunderground.com/forecast/ca/' + wug;
+  const windy='https://www.windy.com/' + (locationdata[0].windy);
+  const loofs=locationdata[0].loofs;
+  const loofs_prefix='https://cdn.tidesandcurrents.noaa.gov/' + (locationdata[0].lake === 'o' ? '' : '') + 'ofs/';
+  const loofs_wl_url=  loofs_prefix + loofs.replace('{XTYPE}','wl') + "_big.png";
+  const loofs_wind_url=loofs_prefix + loofs.replace('{XTYPE}','wind') + "_big.png";
+  const loofs_temp_url=loofs_prefix + loofs.replace('{XTYPE}','temp') + "_big.png";
+  const ideal_wind_dir = locationdata[0].ideal_wind_dir;
+
+  $( '#placename' ).text( placeName );
+  $( '#eciframe' ).attr( 'src', 'https://weather.gc.ca/wxlink/wxlink.html?cityCode=' + ecplace + '&amp;lang=e');
+  $( '#wunderground').html('<a href="' + wunderground + '">WUG</a> ');
+  $( '#windy').html(' <a href="' + windy + '">Wdy</a>');
+  $( '#div_loofs' ).html( ' <img src="' + loofs_wind_url + '" /> ' +
+		'<img src="' + loofs_wl_url + '" />' +
+		'<img src="' + loofs_temp_url + '" />' +
+		   '<img src="wetsuit-temp-guide.svg" height=500 />');
+  const url = glservice_prefix + 'weatherwindwaves.json?suffix='+suffix + '&iwd=' + ideal_wind_dir;
   $.getJSON(url, function(data) {
-     data.imperialSeries[0].okvalue = 6; // knots
-     data.imperialSeries[0].oklabel = "calm";
-     data.imperialSeries[1].okvalue = 0.3; // feet
-     data.imperialSeries[1].oklabel = "still";
-     data.imperialSeries[2].okvalue = 5; // celsius
-     data.imperialSeries[2].oklabel = "warm enough";
-     data.imperialSeries[3].okvalue = 3.1; // m/s
-     data.imperialSeries[3].oklabel = "calm";
-     data.imperialSeries[4].okvalue = 270; // deg
-     data.imperialSeries[4].oklabel = "ideal";
-     data.imperialSeries[5].okvalue = 1.0; // score
-     data.imperialSeries[5].oklabel = "ideal";
+    data.imperialSeries[0].okvalue = 6; // knots
+    data.imperialSeries[0].oklabel = "calm";
+    data.imperialSeries[1].okvalue = 0.3; // feet
+    data.imperialSeries[1].oklabel = "still";
+    data.imperialSeries[2].okvalue = 5; // celsius
+    data.imperialSeries[2].oklabel = "warm enough";
+    data.imperialSeries[3].okvalue = 3.1; // m/s
+    data.imperialSeries[3].oklabel = "calm";
+    data.imperialSeries[4].okvalue = ideal_wind_dir; // deg
+    data.imperialSeries[4].oklabel = "ideal";
+    data.imperialSeries[5].okvalue = 1.0; // score
+    data.imperialSeries[5].oklabel = "ideal";
 
-     const pb_for_night = plotBands_for_night(data.pointStart, data.imperialSeries[0].data.length);
-     const pb_for_score = plotBands_for_score(data.pointStart, data.scoreSeries);
-     var pb = [];
-     pb_for_night.forEach(function (x,i) { pb.push(x); });
-     pb_for_score.forEach(function (x,i) { pb.push(x); });
+    const pb_for_night = plotBands_for_night(data.pointStart, data.imperialSeries[0].data.length);
+    const pb_for_score = plotBands_for_score(data.pointStart, data.scoreSeries);
+    var pb = [];
+    pb_for_night.forEach(function (x,i) { pb.push(x); });
+    pb_for_score.forEach(function (x,i) { pb.push(x); });
 
-     var dgs = [ ];
+    var dgs = [ ];
 
-     data.imperialSeries.forEach( function (x,i) {
-        var dataArr = [ ];
-        var ts = data.pointStart;
-	for(var j=0; j < x.data.length; j++) {
-	   var y = x.data[j];
-	   var pt = [new Date(ts),y,x.okvalue];
-	   if(x.data2) {
-	      pt.push(x.data2[j]);
+    data.imperialSeries.forEach( function (x,i) {
+       var dataArr = [ ];
+       var ts = data.pointStart;
+	   for(var j=0; j < x.data.length; j++) {
+	      var y = x.data[j];
+	      var pt = [new Date(ts),y,x.okvalue];
+	      if(x.data2) {
+	         pt.push(x.data2[j]);
+	      }
+	      dataArr.push(pt);
+	      ts += data.pointInterval;
 	   }
-	   dataArr.push(pt);
-	   ts += data.pointInterval;
-	}
-	var labels = [ 'Date', x.name, x.oklabel ];
-	if(x.name2) {
-	   labels.push(x.name2);
-	}
-	console.log('attaching dygraph for ' + x.name + ' to div_g_' + i);
-        var dg = new Dygraph(
-	   document.getElementById('div_g_' + i),
-	   dataArr,
-	   {
-		ylabel: x.name,
-		strokeWidth: 2,
-		labels: labels,
-		underlayCallback: function (canvas, area, g) {
+	   var labels = [ 'Date', x.name, x.oklabel ];
+	   if(x.name2) {
+	     labels.push(x.name2);
+	   }
+	   console.log('attaching dygraph for ' + x.name + ' to div_g_' + i);
+       var dg = new Dygraph(
+	     document.getElementById('div_g_' + i),
+	     dataArr,
+	     {
+		  ylabel: x.name,
+		  strokeWidth: 2,
+		  labels: labels,
+		  underlayCallback: function (canvas, area, g) {
 			pb.forEach( function(x,i) {
 			    canvas.fillStyle = x.color;
 			    var canvas_left_x = g.toDomXCoord(x.from);
@@ -156,17 +201,16 @@ $(document).ready(function() {
 			    var canvas_width = canvas_right_x - canvas_left_x;
 			    canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
 			});
-		}
-	  });
-	dgs.push(dg);
-	/*dg.setAnnotations([{ 
-	   series: x.oklabel,
-	   x: new Date(data.pointStart),
-	   shortText: x.oklabel,
-	   text: x.oklabel
-	}]);*/
-     });
-     Dygraph.synchronize(dgs);
+		   }
+	     });
+	   dgs.push(dg);
+       });
+       Dygraph.synchronize(dgs, { 
+	     zoom: true,
+	     range: false,
+		 selection: true
+       });
+    });
   });
 });
 
@@ -175,7 +219,9 @@ $(document).ready(function() {
 	</head>
 	<body>
 
-		<h2> Burlington, ON - Conditions</h2>
+		<h2> <b id="placename"></b>,ON - Conditions <b id="wunderground"></b> <b id="windy"></b></h2>
+
+		<i>GLERL data is empty if the lake is frozen</i> <i style="color:black; background-color: lightgreen;"> Ideal Flatwater Conditions (score highlight)</i> 
 
 		    <div id="container"></div>
 		    <div id="div_g_0" style=" height:200px;"></div>
@@ -186,11 +232,9 @@ $(document).ready(function() {
 		    <div id="div_g_5" style=" height:200px;"></div>
 		<p/>
 
-		<img src="https://cdn.tidesandcurrents.noaa.gov/ofs/loofs/wwwgraphics/LOOFS_wind_burl_big.png" />
-		<img src="https://cdn.tidesandcurrents.noaa.gov/ofs/loofs/wwwgraphics/LOOFS_wl_burl_big.png" />
-		<img src="https://cdn.tidesandcurrents.noaa.gov/ofs/loofs/wwwgraphics/LOOFS_temp_burl_big.png" />
+		<div id="div_loofs"> </div>
 
 		<p/>
-		<iframe title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-95&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
+		<iframe id="eciframe" title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-95&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
 	</body>
 </html>

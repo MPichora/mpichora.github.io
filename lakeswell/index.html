@@ -3,6 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <title>Mark's lakeswell page</title>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+ <script async src="https://www.googletagmanager.com/gtag/js?id=G-4J9J7QPK7C"></script>
+ <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4J9J7QPK7C');
+ </script>
+
   <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
   <script src="https://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
   <script src="jquery.ui.touch-punch.min.js"></script>
@@ -27,7 +37,11 @@
 
 
   <script>
-
+  var map;
+  var location_marker_map = []; // from location name -> marker
+  var all_locations = [];
+  var good_location_times = []; // from index (int) -> location name
+  var time_of_index = function (x) { return '' + x + ' index'; }; // default
   var url_base="https://www.glerl.noaa.gov/res/glcfs/";
   var url_base2="https://www.glerl.noaa.gov/emf/";
   var max_hour= 71;
@@ -43,6 +57,41 @@
   console.log("sunset at "+sc.sunset.getHours() +":"+ sc.sunset.getMinutes() );
   var fulllk;
 
+
+	var greenIcon = L.Icon.extend({
+		options: {
+			iconUrl: "sup-small-green-icon.png",
+			iconSize: [20,41],
+			shadowUrl: "sup-shadow.png",
+			shadowAnchor: [20,41],
+			shadowSize: [41,41],
+			iconAnchor: [10,41]
+
+		}
+	});
+	var orangeIcon = L.Icon.extend({
+		options: {
+			iconUrl: "sup-small-orange-icon.png",
+			iconSize: [20,41],
+			shadowUrl: "sup-shadow.png",
+			shadowAnchor: [20,41],
+			shadowSize: [41,41],
+			iconAnchor: [10,41]
+
+		}
+	});
+	var greyIcon = L.Icon.extend({
+		options: {
+			iconUrl: "sup-small-grey-icon.png",
+			iconSize: [20,41],
+			shadowUrl: "sup-shadow.png",
+			shadowAnchor: [20,41],
+			shadowSize: [41,41],
+			iconAnchor: [10,41]
+
+		}
+	});
+
   function format_url(prefix,offset,suffix) {
     return prefix + offset + suffix;
   }
@@ -52,6 +101,21 @@
     } else {
 	    return format_url( url_base + fulllk + "/cur/" + lk + basename + "-" , 0-offset , ".png");
     }
+  }
+  function new_format2(fulllk,basename,offset) { // funky math for temp frames
+	var rest = '';
+	var real_offset = 0;
+	if(offset>=0) {
+		real_offset = Math.floor(offset/3 + 49);
+	} else {
+        real_offset = 49 + offset;
+	}
+	if(real_offset <= 0) {
+		rest = '/temp.png';
+	} else {
+        rest = '/frames/temp_' + real_offset + '.png';
+	}
+	return  (url_base + fulllk + rest);
   }
   function wind_and_currents(lk,fulllk,offset) {
     var basename="wndcur";
@@ -73,27 +137,65 @@
 	    return format_url( url_base2 + "/waves/WW3/images/" + "ww3wngl" + lk + "-" , 0-offset , ".png" );
     }
   }
-  function temperatures(lk,fulllk,offset) {
-    var basename="swt";
-    return new_format(lk,fulllk,basename,Math.floor((offset-1)/3));
-  }
   function get_full_lake(lk) {
     var fulllk;
     if(lk == "o") {
 	fulllk="ontario_hires";
-    } else if(lk == "mh") {
-	fulllk="mich-huron";
+    } else if(lk == "m") {
+	fulllk="mich";
+    } else if(lk == "h") {
+	fulllk="huron";
     } else if(lk == "e") {
 	fulllk="erie";
-    } else {
+    } else { // "s"
 	fulllk="superior_hires";
     }
     return fulllk;
   }
+  function get_full_lake2(lk) {
+    var fulllk;
+    if(lk == "o") {
+	fulllk="ont";
+    } else if(lk == "m") {
+	fulllk="mih";
+    } else if(lk == "h") {
+	fulllk="mih";
+    } else if(lk == "e") {
+	fulllk="eri";
+    } else { // "s"
+	fulllk="sup";
+    }
+    return fulllk;
+  }
+
+  function temperatures(lk,fulllk,offset) {
+    var basename="swt";
+	var lk2 = lk;
+	var fulllk2 = get_full_lake2(lk);
+    return new_format2(fulllk2,basename,(offset-1));
+  }
+  
   function showLake(lk) {
     //preload images from -48 to 72
   fulllk=get_full_lake(lk);
 
+  if(map) {
+    const lakemap = [ 
+	  { name: 'o', lng: 43.62655, lat: -77.986635, zoom: 8 }, 
+	  { name: 'm', lng: 43.50048, lat: -87.24812, zoom: 6 },
+	  { name: 'e', lng: 42.12228, lat: -81.364878, zoom: 7 },
+	  { name: 's', lng: 47.781458, lat: -87.16837, zoom: 7 },
+	  { name: 'h', lng: 45.02780, lat: -82.41437, zoom: 6 }
+	  ];
+    var lake;
+    for(var k=0; k<lakemap.length; k++) {
+	  if(lakemap[k].name === lk) {
+		  lake = lakemap[k];
+		  break;
+	  }
+    }
+    map.setView([lake.lng,lake.lat],lake.zoom);
+  }
 
 
   var the_images = [];
@@ -105,8 +207,76 @@
     the_images.push(waves(lk,offset));
     the_images.push(temperatures(lk,fulllk,offset));
   }
-  
 
+  var lakes = [ 'o', 'e', 'm', 'h', 's'];
+  lakes.forEach(function (lk) {
+    var allItems;
+    $.getJSON(glservice_prefix + 'lakescores.json?lake=' + lk,function (data) {
+	    if(!allItems) {
+			allItems = [];
+			data.goodScores.forEach( function (xx) {
+				xx.good.forEach( function (gg) {
+					if(!allItems.find( (yy) => yy === gg)) {
+						allItems.push(gg);
+					}
+				});
+			});
+			console.log("all items for lake " + lk + " are " + allItems);
+	    }
+	    if(data.pointInterval) {
+	      time_of_index = function (ii) {
+		    var ts = data.pointStart + data.pointInterval*ii;
+		    return '' + (new Date(ts));
+	      };
+	    }
+	    var did_indexes = []; // for this lake
+	    data.goodScores.forEach( function (xx) {
+		  var i = (xx.ts - data.pointStart)/data.pointInterval;
+		  var badItems = [];
+		  allItems.forEach(function (yy) {
+				if(!xx.good.find( (zz) => zz === yy)) {
+					badItems.push(yy);
+				}
+		  });
+		  //console.log(" at " + i + " good items are " + xx.good + "   bad items are " + badItems);
+		  var glt_found = good_location_times.find( (glt) => glt.idx === i);
+		  if(glt_found) {
+		    xx.good.forEach( (y) => 
+			    { 
+				  if(!glt_found.greenItems.find((x_) => x_ === y) ) { 
+					glt_found.greenItems.push(y); 
+				  }
+			    });
+		    badItems.forEach( (y) => 
+			    {
+				  if(!glt_found.orangeItems.find((x_) => x_ === y ) ) {
+					glt_found.orangeItems.push(y);
+				  }
+				});
+		  } else {
+		    good_location_times.push({ idx: i, ts: xx.ts, greenItems: xx.good, orangeItems: badItems });
+		  }
+		  did_indexes.push(i);
+	    });
+	    for(var i=0; i< 72; i++) {
+	       var ind_found = did_indexes.find( (ii) => ii === i);
+	       if(!ind_found) {
+		  var glt_found = good_location_times.find( (glt) => glt.idx === i);
+		  if(glt_found) {
+		     allItems.forEach( (y) => 
+			    {
+				  if(!glt_found.orangeItems.find((x_) => x_ === y ) ) {
+					glt_found.orangeItems.push(y);
+				  }
+				});
+		  } else {
+			 var tslocal = i* data.pointInterval + data.pointStart;
+		     good_location_times.push({idx: i, ts: tslocal, greenItems: [], orangeItems: allItems});
+		  }
+	       }
+	    } 
+    });
+  });
   
       $( "#slider" ).slider({
 	  background: 100, 
@@ -122,6 +292,45 @@
         $("#wind").attr("src",wind(lk,offset));
         $("#waves").attr("src",waves(lk,offset));
         $("#temps").attr("src",temperatures(lk,fulllk,offset));
+		$('#text_time').html('<strong> at ' + (time_of_index(offset)) + '</strong>');
+		if(good_location_times && good_location_times.length >0) {
+			var allItems = all_locations;
+		    //good_location_times[0].greenItems.forEach( (oi) => allItems.push(oi));
+		    //good_location_times[0].orangeItems.forEach( (oi) => allItems.push(oi));
+		    var found = good_location_times.find( (rec) => rec.idx === offset);
+		    if(!found) {
+				found = { orangeItems: allItems, greenItems: [], greyItems: [] };
+			} else {
+				found.greyItems = [];
+			}	
+			var ds = new Date(time_of_index(offset));
+			if(ds.getHours() < sc.sunrise.getHours() || ds.getHours() > sc.sunset.getHours()) {
+				found = { orangeItems: [], greenItems: [], greyItems: allItems };
+			}
+			console.log('at ' + offset + '(' + ds + ')(' + found.ts + ') green items are ' + found.greenItems 
+				+ '   orangeItems are ' + found.orangeItems
+				+ '   greyItems are ' + found.greyItems); 
+			if(location_marker_map) {
+				found.greenItems.forEach( function(placename) {
+					var fdm = location_marker_map.find( (rec) => rec.name === placename);
+					if(fdm) {
+						fdm.marker.setIcon(new greenIcon);
+					}
+				});
+				found.orangeItems.forEach( function(placename) {
+					var fdm = location_marker_map.find( (rec) => rec.name === placename);
+					if(fdm) {
+						fdm.marker.setIcon(new orangeIcon);
+					}
+				});
+				found.greyItems.forEach( function(placename) {
+					var fdm = location_marker_map.find( (rec) => rec.name === placename);
+					if(fdm) {
+						fdm.marker.setIcon(new greyIcon);
+					}
+				});
+			}
+		}
         //$("#currents").attr("src",url_base +lk+"sfcur"+ offset +".gif"); 
 
 	// debug stuff:
@@ -171,29 +380,62 @@
   }
 
   function newLakeOnClick(elmt) {
-	  console.log(elmt.href);
+	  console.log(elmt.href)
   }
+
+  const glservice_prefix = 'https://flawless-kindhearted-veterinarian.glitch.me/';
+  //const glservice_prefix = 'http://127.0.0.1:5000/'
 
 
   $(function() {
 	  $("#elake").on('click', function () { showLake("e"); $("button.dropbtn").text("Lake Erie"); });
-	  $("#mhlake").on('click', function () { showLake("mh"); $("button.dropbtn").text("Lake Huron-Michigan"); });
+	  $("#mlake").on('click', function () { showLake("m"); $("button.dropbtn").text("Lake Michigan"); });
+	  $("#hlake").on('click', function () { showLake("h"); $("button.dropbtn").text("Lake Huron"); });
 	  $("#slake").on('click', function () { showLake("s"); $("button.dropbtn").text("Lake Superior"); });
 	  $("#olake").on('click', function () { showLake("o"); $("button.dropbtn").text("Lake Ontario"); });
-	  showLake("o");
 
-	  var map = L.map('selectmap').setView([43.62655,-77.986635], 8);
-	  L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	  map = L.map('selectmap').setView([43.62655,-77.986635], 8);
+	  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 		      subdomains: [ 'a', 'b', 'c' ]
 	  }).addTo(map);
-          L.marker([ lt, lg ])
-	      .addTo(map)
-	      .on( 'click', function (e) {
-		      console.log(e.latlng);
-		      location.href = "dygraphs.html";
-	      });
+	  L.Control.textbox = L.Control.extend({
+		onAdd: function (map) {
+			var text_time = L.DomUtil.create('div');
+			text_time.id = "text_time";
+			text_time.innerHTML = "<strong>time goes here</strong>";
+			return text_time;
+		},
+		onRemove: function(map) {}
+	  });
+      L.control.textbox = function(opts) { return new L.Control.textbox(opts)};
+	  L.control.textbox({ position: 'topright' }).addTo(map);
+	  showLake("o");
 
+
+	  // place specific locations here
+	  $.getJSON(glservice_prefix + 'conditionLocations.json', function (placemap) {
+		placemap.forEach( function (place,ii) {
+				var marker = L.marker(place.coord, { icon: (new orangeIcon) });
+				marker.addTo(map)
+				.on( 'click', function (e) {
+					console.log(e.latlng);
+					location.href = 'dygraphs.html?location=' + place.name
+					;
+				});
+				location_marker_map.push({ name: place.name, marker: marker });
+				if( !all_locations.find( (yy) => yy === place.name) ) {
+					all_locations.push(place.name);
+				}
+		});
+
+	  });
+
+
+	  // trigger draw of map
+      setTimeout(() => {
+	             map.invalidateSize();
+	    }, 200);
   });
   </script>
   
@@ -207,7 +449,8 @@
 	<button class="dropbtn">Lake Ontario</button>
 	<div class="dropdown-content">
 		<a id="olake" onclick="newLakeOnClick(this)">Ontario</a>
-		<a id="mhlake" onclick="newLakeOnClick(this)">Huron-Michigan</a>
+		<a id="mlake" onclick="newLakeOnClick(this)">Michigan</a>
+		<a id="hlake" onclick="newLakeOnClick(this)">Huron</a>
 		<a id="elake" onclick="newLakeOnClick(this)">Erie</a>
 		<a id="slake" onclick="newLakeOnClick(this)">Superior</a>
 	</div>
@@ -248,8 +491,12 @@
 <div style="clear:both;" ></div>
 <p id="temps_title"> temperatures </p> 
 
+<br/>
+<p><a href="https://tidesandcurrents.noaa.gov/ofs/dev/ofs_animation.shtml?ofsregion=lo&subdomain=0&model_type=wind_forecast"> OFS Wind Forecast</a> </p>
+
 <div id="footer">
 <p >Images from <a href="http://www.glerl.noaa.gov/res/glcfs/" target="_blank">GLCFS by GLERL</a>.</p> 
+<p> Weather data from <a href="
 </div>
 
 
